@@ -26,8 +26,20 @@ def get_locations(cur):
     cur.execute("SELECT LocationID, LocationName FROM tbllocations ORDER BY LocationID")
     return cur.fetchall()
 
+def get_vendors(cur):
+    # Only suppliers. AZ Renovation is a painting subcontractor, not a product source.
+    cur.execute(
+        "SELECT VendorID, VendorName FROM tblvendors WHERE VendorType = 'Supplier' ORDER BY VendorName"
+    )
+    return cur.fetchall()
+
 
 @app.route("/")
+def index():
+    # Staff portal: links to each form
+    return render_template("index.html")
+
+
 @app.route("/employees")
 def employees():
     # The dropdown puts the chosen branch in the URL, e.g. /employees?location_id=3
@@ -98,3 +110,126 @@ def add_employee():
     # Hire date starts as today on a blank form
     today = date.today().isoformat()
     return render_template("add_employee.html", locations=locations, error=error, form=request.form, today=today)
+
+
+STATES = ["AZ", "NV", "NM"]  # HRS service area
+
+
+@app.route("/customers")
+def customers():
+    # Optional search box puts the text in the URL, e.g. /customers?q=smith
+    search = request.args.get("q", "").strip()
+
+    conn = get_connection()
+    try:
+        with conn.cursor() as cur:
+            sql = """
+                SELECT CustomerID, FirstName, LastName, Phone, Email, Street, City, State, Zip
+                FROM tblcustomers
+            """
+            if search:
+                # The % signs mean "anything before or after", so "smi" matches "Smith"
+                like = f"%{search}%"
+                cur.execute(
+                    sql + " WHERE FirstName LIKE %s OR LastName LIKE %s ORDER BY LastName, FirstName",
+                    (like, like),
+                )
+            else:
+                cur.execute(sql + " ORDER BY LastName, FirstName")
+            rows = cur.fetchall()
+    finally:
+        conn.close()
+
+    return render_template("customers.html", customers=rows, search=search)
+
+
+@app.route("/customers/add", methods=["GET", "POST"])
+def add_customer():
+    error = None
+
+    if request.method == "POST":
+        fields = ["first_name", "last_name", "phone", "email", "street", "city", "state", "zip"]
+        values = {f: request.form.get(f, "").strip() for f in fields}
+
+        if not all(values.values()):
+            error = "Fill in every field."
+        elif values["state"] not in STATES:
+            error = "Choose a state from the list."
+        else:
+            conn = get_connection()
+            try:
+                with conn.cursor() as cur:
+                    cur.execute(
+                        """
+                        INSERT INTO tblcustomers
+                            (FirstName, LastName, Phone, Email, Street, City, State, Zip)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                        """,
+                        tuple(values[f] for f in fields),
+                    )
+                conn.commit()  # Nothing is saved until this runs
+            finally:
+                conn.close()
+
+            # Show the list filtered to the new customer's last name
+            return redirect(url_for("customers", q=values["last_name"]))
+
+    return render_template("add_customer.html", states=STATES, error=error, form=request.form)
+
+@app.route("/products")
+def products():
+    conn = get_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                    """
+                    SELECT ProductID, Category, Brand, ProductDescription, ModelNumber, Cost, ListPrice
+                    FROM tblproducts
+                    ORDER BY ProductID, Category, Brand, ProductDescription, ModelNumber, Cost, ListPrice
+                    """
+            )
+            rows = cur.fetchall()
+    finally:
+        conn.close()
+
+    return render_template("products.html", products=rows)
+
+@app.route("/products/add", methods=["GET", "POST"])
+def add_products():
+    error = None
+
+    conn = get_connection()
+    try:
+        if request.method == "POST":
+            vendor_id = request.form.get("vendor_id", type=int)
+            fields = ["model_number", "brand", "product_description", "category", "cost", "list_price"]
+            values = {f: request.form.get(f, "").strip() for f in fields}
+
+            if not vendor_id or not all(values.values()):
+                error = "Fill in every field."
+            else:
+                try:
+                    float(values["cost"])
+                    float(values["list_price"])
+                except ValueError:
+                    error = "Cost and list price must be numbers."
+
+            if not error:
+                with conn.cursor() as cur:
+                    cur.execute(
+                        """
+                        INSERT INTO tblproducts
+                            (VendorID, ModelNumber, Brand, ProductDescription, Category, Cost, ListPrice)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s)
+                        """,
+                        (vendor_id,) + tuple(values[f] for f in fields),
+                    )
+                conn.commit()  # Nothing is saved until this runs
+                return redirect(url_for("products"))
+
+        with conn.cursor() as cur:
+            vendors = get_vendors(cur)
+    finally:
+        conn.close()
+
+    return render_template("add_products.html", vendors=vendors, error=error, form=request.form)

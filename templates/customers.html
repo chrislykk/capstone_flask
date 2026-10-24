@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Manage Customers | HRS</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 64rem; margin: 2rem auto; padding: 0 1rem; color: #222; }
+    h1 { font-size: 1.5rem; margin-bottom: 1rem; }
+    input, button { font-size: 1rem; padding: 0.3rem 0.5rem; }
+    .table-wrap { overflow-x: auto; }
+    table { border-collapse: collapse; width: 100%; margin-top: 1.5rem; }
+    th, td { text-align: left; padding: 0.5rem 0.75rem; border-bottom: 1px solid #ddd; white-space: nowrap; }
+    th { background: #f2f4f7; }
+    .count { color: #666; margin-top: 1.5rem; }
+  </style>
+</head>
+<body>
+  <h1>Manage Customers</h1>
+  <p><a href="{{ url_for('index') }}">Staff portal</a> | <a href="{{ url_for('add_customer') }}">Add a customer</a></p>
+
+  <form method="get" action="{{ url_for('customers') }}">
+    <label for="q">Search by name</label>
+    <input type="text" name="q" id="q" value="{{ search }}" placeholder="First or last name">
+    <button type="submit">Search</button>
+    {% if search %}<a href="{{ url_for('customers') }}">Show all</a>{% endif %}
+  </form>
+
+  {% if customers %}
+    <p class="count">{{ customers|length }} customer{{ "s" if customers|length != 1 }}</p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>ID</th><th>Name</th><th>Phone</th><th>Email</th><th>Address</th></tr>
+        </thead>
+        <tbody>
+          {% for c in customers %}
+            <tr>
+              <td>{{ c.CustomerID }}</td>
+              <td>{{ c.FirstName }} {{ c.LastName }}</td>
+              <td>{{ c.Phone or "" }}</td>
+              <td>{{ c.Email or "" }}</td>
+              <td>{{ c.Street or "" }}{% if c.City %}, {{ c.City }}{% endif %} {{ c.State or "" }} {{ c.Zip or "" }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p class="count">No customers found{% if search %} matching "{{ search }}"{% endif %}.</p>
+  {% endif %}
+</body>
+</html>

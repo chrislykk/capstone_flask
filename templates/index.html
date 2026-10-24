@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Staff Portal | HRS</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 40rem; margin: 2rem auto; padding: 0 1rem; color: #222; }
+    h1 { font-size: 1.5rem; margin-bottom: 1rem; }
+    ul { list-style: none; padding: 0; }
+    li { margin: 0.75rem 0; font-size: 1.1rem; }
+  </style>
+</head>
+<body>
+  <h1>HRS Staff Portal</h1>
+  <ul>
+    <li><a href="{{ url_for('employees') }}">Manage Employees</a></li>
+    <li><a href="{{ url_for('customers') }}">Manage Customers</a></li>
+    <li><a href="{{ url_for('products') }}">Manage Products</a></li>
+  </ul>
+</body>
+</html>

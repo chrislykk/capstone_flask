@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Add Customer | HRS</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 32rem; margin: 2rem auto; padding: 0 1rem; color: #222; }
+    h1 { font-size: 1.5rem; margin-bottom: 1rem; }
+    label { display: block; margin-top: 1rem; font-weight: 600; }
+    input, select { font-size: 1rem; padding: 0.4rem; width: 100%; box-sizing: border-box; margin-top: 0.25rem; }
+    button { margin-top: 1.5rem; font-size: 1rem; padding: 0.5rem 1.25rem; }
+    .error { color: #b00020; }
+  </style>
+</head>
+<body>
+  <h1>Add a customer</h1>
+  <p><a href="{{ url_for('customers') }}">Back to customers</a></p>
+
+  {% if error %}<p class="error">{{ error }}</p>{% endif %}
+
+  <form method="post">
+    <label for="first_name">First name</label>
+    <input type="text" name="first_name" id="first_name" maxlength="50" required value="{{ form.get('first_name', '') }}">
+
+    <label for="last_name">Last name</label>
+    <input type="text" name="last_name" id="last_name" maxlength="50" required value="{{ form.get('last_name', '') }}">
+
+    <label for="phone">Phone</label>
+    <input type="tel" name="phone" id="phone" maxlength="20" placeholder="(480) 555-0123" required value="{{ form.get('phone', '') }}">
+
+    <label for="email">Email</label>
+    <input type="email" name="email" id="email" maxlength="100" placeholder="name@example.com" required value="{{ form.get('email', '') }}">
+
+    <label for="street">Street</label>
+    <input type="text" name="street" id="street" maxlength="100" required value="{{ form.get('street', '') }}">
+
+    <label for="city">City</label>
+    <input type="text" name="city" id="city" maxlength="50" required value="{{ form.get('city', '') }}">
+
+    <label for="state">State</label>
+    <select name="state" id="state" required>
+      <option value="">Choose a state</option>
+      {% for st in states %}
+        <option value="{{ st }}" {% if form.get('state') == st %}selected{% endif %}>{{ st }}</option>
+      {% endfor %}
+    </select>
+
+    <label for="zip">ZIP code</label>
+    <input type="text" name="zip" id="zip" maxlength="10" inputmode="numeric" pattern="\d{5}(-\d{4})?" placeholder="85001" required value="{{ form.get('zip', '') }}">
+
+    <button type="submit">Add customer</button>
+  </form>
+</body>
+</html>
