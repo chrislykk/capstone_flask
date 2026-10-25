@@ -1,5 +1,17 @@
 <!doctype html>
-<title>HRS Staff Login</title>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HRS Staff Login</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 40rem; margin: 2rem auto; padding: 0 1rem; color: #222; }
+    h1 { font-size: 1.5rem; margin-bottom: 1rem; }
+    ul { list-style: none; padding: 0; }
+    li { margin: 0.75rem 0; font-size: 1.1rem; }
+  </style>
+</head>
+<body>
 <h1>HRS Staff Login</h1>
 {% if error %}<p style="color:red">{{ error }}</p>{% endif %}
 <form method="post">
@@ -7,3 +19,5 @@
   <label>Password <input name="password" type="password" required></label><br>
   <button type="submit">Log in</button>
 </form>
+</body>
+</html>
