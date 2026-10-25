@@ -1,0 +1,9 @@
+<!doctype html>
+<title>HRS Staff Login</title>
+<h1>HRS Staff Login</h1>
+{% if error %}<p style="color:red">{{ error }}</p>{% endif %}
+<form method="post">
+  <label>Username <input name="username" required autofocus></label><br>
+  <label>Password <input name="password" type="password" required></label><br>
+  <button type="submit">Log in</button>
+</form>

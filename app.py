@@ -2,10 +2,12 @@ import os
 from datetime import date
 
 import pymysql
-from flask import Flask, redirect, render_template, request, url_for
+from flask import Flask, redirect, render_template, request, url_for, session
+from werkzeug.security import check_password_hash
 
 app = Flask(__name__)
 
+app.secret_key = os.environ["SECRET_KEY"]
 
 def get_connection():
     # Credentials come from environment variables (or a .env file when running locally).
@@ -33,6 +35,36 @@ def get_vendors(cur):
     )
     return cur.fetchall()
 
+@app.before_request
+def require_login():
+    # Let the login page and static files through; everything else needs a session.
+    if request.endpoint in ("login", "static"):
+        return None
+    if "user" not in session:
+        return redirect(url_for("login"))
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    error = None
+    if request.method == "POST":
+        username = request.form.get("username", "").strip()
+        password = request.form.get("password", "")
+        conn = get_connection()
+        try:
+            with conn.cursor() as cur:
+                cur.execute(
+                    "SELECT Username, PasswordHash FROM tblstaffusers WHERE Username = %s",
+                    (username,),
+                )
+                row = cur.fetchone()
+        finally:
+            conn.close()
+        if row and check_password_hash(row["PasswordHash"], password):
+            session.clear()
+            session["user"] = row["Username"]
+            return redirect("/")
+        error = "Invalid username or password."
+    return render_template("login.html", error=error)
 
 @app.route("/")
 def index():
@@ -233,3 +265,8 @@ def add_products():
         conn.close()
 
     return render_template("add_products.html", vendors=vendors, error=error, form=request.form)
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect(url_for("login"))
