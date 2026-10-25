@@ -17,7 +17,7 @@
 </head>
 <body>
   <h1>Manage Employees</h1>
-  <p><a href="{{ url_for('index') }}">Staff portal</a> | <a href="{{ url_for('add_employee') }}">Add an employee</a><a href="/logout">Log out</a></p>
+  <p><a href="{{ url_for('index') }}">Staff portal</a> | <a href="{{ url_for('add_employee') }}">Add an employee</a> | <a href="/logout">Log out</a></p>
 
   <form method="get" action="{{ url_for('employees') }}">
     <label for="location_id">Branch</label>
