@@ -17,7 +17,7 @@
 </head>
 <body>
   <h1>Manage Customers</h1>
-  <p><a href="{{ url_for('index') }}">Staff portal</a> | <a href="{{ url_for('add_customer') }}">Add a customer</a></p>
+  <p><a href="{{ url_for('index') }}">Staff portal</a> | <a href="{{ url_for('add_customer') }}">Add a customer</a> | <a href="/logout">Log out</a></p>
 
   <form method="get" action="{{ url_for('customers') }}">
     <label for="q">Search by name</label>
