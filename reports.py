@@ -124,7 +124,7 @@ def sales_summary():
         JOIN tblcustomers c ON o.CustomerID = c.CustomerID
         LEFT JOIN tblemployees e ON o.EmployeeID = e.EmployeeID
         JOIN tbllocations l ON o.LocationID = l.LocationID
-        WHERE 1 {' '.join(filters)}
+        WHERE o.OrderStatus <> 'Cancelled' {' '.join(filters)}
         ORDER BY o.OrderDate, o.OrderID
     """, args)
 
@@ -192,14 +192,17 @@ def customer_statements(customer_id):
         statements=statements
     )
 
-def get_orders_base_query(filters):
+def get_orders_base_query(filters, payment_filter):
     """
     Returns query used directly
     to get orders for a statement,
     and as a subquery for calculating
     the statement's beginning balance.
+    payment_filter limits which payments count, by payment date,
+    so a statement only shows payments made by that point in time.
     """
     filters.append('o.CustomerID = %(customer_id)s')
+    filters.append("o.OrderStatus <> 'Cancelled'")  # Cancelled orders are not owed
     return f"""
         SELECT
             o.*,
@@ -224,6 +227,7 @@ def get_orders_base_query(filters):
                 SUM(Amount) AS TotalPaid,
                 MAX(PaymentDate) AS LastPaymentDate
             FROM tblpayments
+            WHERE {payment_filter}
             GROUP BY OrderID
         ) p_grouped ON o.OrderID = p_grouped.OrderID
         WHERE {' AND '.join(filters)}
@@ -251,19 +255,44 @@ def statement(customer_id, statement_year, statement_month):
 
     payment_due_date = statement_end_date + timedelta(days=15)
 
-    args = {'customer_id': customer_id, 'statement_start_date': statement_start_date, 'statement_end_date': statement_end_date}
+    # First day of the next month. Using "< next month" instead of "<= last day"
+    # also catches payments made late on the last day if the column holds a time.
+    next_month_start = statement_end_date + timedelta(days=1)
 
+    args = {
+        'customer_id': customer_id,
+        'statement_start_date': statement_start_date,
+        'statement_end_date': statement_end_date,
+        'next_month_start': next_month_start,
+    }
+
+    # Beginning balance: earlier orders, minus only the payments made before this month
     beginning_balance_query = f"""
         SELECT
             COALESCE(SUM(AmountDue), 0) AS BeginningBalance
-        FROM ({get_orders_base_query(['o.OrderDate < %(statement_start_date)s'])}) orders
+        FROM ({get_orders_base_query(['o.OrderDate < %(statement_start_date)s'], 'PaymentDate < %(statement_start_date)s')}) orders
     """
     beginning_balance = execute(beginning_balance_query, args)[0]['BeginningBalance']
 
-    customer_orders = execute(get_orders_base_query(['o.OrderDate >= %(statement_start_date)s', 'o.OrderDate <= %(statement_end_date)s']), args)
+    # This month's orders, showing payments made up to the end of this month
+    customer_orders = execute(get_orders_base_query(
+        ['o.OrderDate >= %(statement_start_date)s', 'o.OrderDate <= %(statement_end_date)s'],
+        'PaymentDate < %(next_month_start)s'
+    ), args)
 
     new_charges = sum([o['OrderTotal'] for o in customer_orders])
-    total_payments = sum([o['TotalPaid'] for o in customer_orders])
+
+    # Payments made during this month, on any of the customer's orders (old or new)
+    total_payments = execute("""
+        SELECT
+            COALESCE(SUM(p.Amount), 0) AS TotalPayments
+        FROM tblpayments p
+        JOIN tblorders o ON p.OrderID = o.OrderID
+        WHERE o.CustomerID = %(customer_id)s
+          AND o.OrderStatus <> 'Cancelled'
+          AND p.PaymentDate >= %(statement_start_date)s
+          AND p.PaymentDate < %(next_month_start)s
+    """, args)[0]['TotalPayments']
     balance_due = beginning_balance + new_charges - total_payments
 
     return render_template(
