@@ -1,0 +1,62 @@
+{% extends "reports/base.html" %}
+
+{% block title %}Customer Report | HRS{% endblock %}
+
+{% block content %}
+<br>
+<h1>Customer Report</h1>
+<table class="table">
+    <thead>
+        <tr class="theme-inverse">
+            <td>Name</td>
+            <td>Phone</td>
+            <td>Email</td>
+            <td>Address</td>
+            <td>Products Purchased</td>
+            <td>Statement</td>
+        </tr>
+    </thead>
+    <tbody>
+    {% for c in customers %}
+        <tr>
+            <td>{{c.FirstName}} {{c.LastName}}</td>
+            <td>{{c.Phone}}</td>
+            <td>{{c.Email}}</td>
+            <td>{{c.Street}}, {{c.City}}, {{c.State}} {{c.Zip}}</td>
+            <td>
+                {% if products_by_customer[c.CustomerID] %}
+                <details>
+                    <summary>{{products_by_customer[c.CustomerID] | count}}</summary>
+                    <table class="table">
+                        <thead>
+                            <tr class="theme-inverse">
+                                <td>Brand</td>
+                                <td>Model Number</td>
+                                <td>Description</td>
+                                <td>Category</td>
+                                <td>Quantity</td>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for p in products_by_customer[c.CustomerID] %}
+                            <tr>
+                                <td>{{p.Brand}}</td>
+                                <td>{{p.ModelNumber}}</td>
+                                <td>{{p.ProductDescription}}</td>
+                                <td>{{p.Category}}</td>
+                                <td>{{p.Quantity}}</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </details>
+                {% else %}
+                (none)
+                {% endif %}
+            </td>
+            <td><a href="{{url_for('reports.customer_statements', customer_id=c.CustomerID)}}">View Statement</a></td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

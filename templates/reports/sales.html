@@ -1,0 +1,45 @@
+{% extends "reports/base.html" %}
+
+{% block title %}Sales Summary | HRS{% endblock %}
+
+{% block content %}
+<br>
+<h1>Sales Summary</h1>
+<form>
+    <label for="start">Start Date</label>
+    <input type="date" name="start" id="start" class="form-control" value="{{args.start}}">
+    <label for="end">End Date</label>
+    <input type="date" name="end" id="end" class="form-control" value="{{args.end}}">
+    <input type="submit" class="form-control" value="Filter">
+</form>
+<br>
+<table class="table">
+    <thead>
+        <tr class="theme-inverse">
+            <td>Order ID</td>
+            <td>Order Date</td>
+            <td>Line Item Total</td>
+            <td>Customer Name</td>
+            <td>Employee Name</td>
+            <td>Location Name</td>
+        </tr>
+    </thead>
+    <tbody>
+    {% for s in sales %}
+        <tr>
+            <td>{{s.OrderID}}</td>
+            <td>{{s.OrderDate}}</td>
+            <td>{{"${:,.2f}".format(s.LineItemTotal)}}</td>
+            <td>{{s.CustomerName}}</td>
+            <td>{{s.EmployeeName}}</td>
+            <td>{{s.LocationName}}</td>
+        </tr>
+    {% endfor %}
+    <tr>
+        <td colspan="2"><strong>Total:</strong></td>
+        <td colspan="4"><strong>{{"${:,.2f}".format(total)}}</strong></td>
+    </tr>
+
+    </tbody>
+</table>
+{% endblock %}

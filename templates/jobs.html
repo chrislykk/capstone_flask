@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Manage Jobs | HRS</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 72rem; margin: 2rem auto; padding: 0 1rem; color: #222; }
+    h1 { font-size: 1.5rem; margin-bottom: 1rem; }
+    select { font-size: 1rem; padding: 0.3rem; }
+    .table-wrap { overflow-x: auto; }
+    table { border-collapse: collapse; width: 100%; margin-top: 1.5rem; }
+    th, td { text-align: left; padding: 0.5rem 0.75rem; border-bottom: 1px solid #ddd; white-space: nowrap; }
+    th { background: #f2f4f7; }
+    .num { text-align: right; }
+    .count { color: #666; margin-top: 1.5rem; }
+  </style>
+</head>
+<body>
+  <h1>Manage Jobs</h1>
+  <p><a href="{{ url_for('index') }}">Staff portal</a> | <a href="{{ url_for('add_job') }}">Add a job</a> | <a href="/logout">Log out</a></p>
+
+  <form method="get" action="{{ url_for('jobs') }}">
+    <label for="status">Status</label>
+    <select name="status" id="status" onchange="this.form.submit()">
+      <option value="">All jobs</option>
+      {% for s in statuses %}
+        <option value="{{ s }}" {% if s == status %}selected{% endif %}>{{ s }}</option>
+      {% endfor %}
+    </select>
+    <noscript><button type="submit">Show jobs</button></noscript>
+  </form>
+
+  {% if jobs %}
+    <p class="count">{{ jobs|length }} job{{ "s" if jobs|length != 1 }}</p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th><th>Bid date</th><th>Customer</th><th>Description</th><th>Branch</th>
+            <th>Salesperson</th><th>Status</th><th class="num">Estimate</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for j in jobs %}
+            <tr>
+              <td><a href="{{ url_for('job_detail', job_id=j.JobID) }}">{{ j.JobID }}</a></td>
+              <td>{{ j.BidDate or "" }}</td>
+              <td>{{ j.CustFirst }} {{ j.CustLast }}</td>
+              <td>{{ j.JobDescription or "" }}</td>
+              <td>{{ j.LocationName }}</td>
+              <td>{% if j.EmpFirst %}{{ j.EmpFirst }} {{ j.EmpLast }}{% endif %}</td>
+              <td>{{ j.JobStatus }}</td>
+              <td class="num">${{ "%.2f"|format(j.Estimate) }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p class="count">No jobs found{% if status %} with status "{{ status }}"{% endif %}.</p>
+  {% endif %}
+</body>
+</html>

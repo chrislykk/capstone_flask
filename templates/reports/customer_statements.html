@@ -1,0 +1,20 @@
+{% extends "reports/base.html" %}
+
+{% block title %}Customer Statement | HRS{% endblock %}
+
+{% block content %}
+<br>
+<h1>Customer Statements - {{customer.CustomerName}}</h1>
+
+{% if statements %}
+    <h5>Select a statement:</h5>
+{% else %}
+    <h5>This customer has no statements.</h5>
+{% endif %}
+
+<ul>
+    {% for s in statements%}
+    <li><a href="{{url_for('reports.statement', customer_id=customer.CustomerID, statement_year=s.StatementYear, statement_month=s.StatementMonth)}}">{{s.StatementYear}}-{{s.StatementMonth}}</a></li>
+    {% endfor %}
+</ul>
+{% endblock %}

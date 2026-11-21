@@ -1,0 +1,14 @@
+{% extends "reports/base.html" %}
+
+{% block title %}Reports | HRS{% endblock %}
+
+{% block content %}
+    <h1>Reports</h1>
+    <ul>
+        <li><a href="{{url_for('reports.customer')}}">Customer Report</a></li>
+        <li><a href="{{url_for('reports.product')}}">Product Report</a></li>
+        <li><a href="{{url_for('reports.sales_summary')}}">Sales Summary</a></li>
+        <li><a href="{{url_for('reports.employee')}}">Employee Report</a></li>
+    </ul>
+
+{% endblock %}

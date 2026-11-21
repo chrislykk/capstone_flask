@@ -1,0 +1,40 @@
+{% extends "reports/base.html" %}
+
+{% block title %}Product Report | HRS{% endblock %}
+
+{% block content %}
+<br>
+<h1>Product Report</h1>
+<table class="table">
+    <thead>
+        <tr class="theme-inverse">
+            <td>ProductID</td>
+            <td>Model Number</td>
+            <td>Brand</td>
+            <td>Product Description</td>
+            <td>Category</td>
+            <td>Cost</td>
+            <td>List Price</td>
+            <td>Delivery Cost</td>
+            <td>Sold Quantity</td>
+            <td>On Hand Quantity</td>
+        </tr>
+    </thead>
+    <tbody>
+    {% for p in products %}
+        <tr>
+            <td>{{p.ProductID}}</td>
+            <td>{{p.ModelNumber}}</td>
+            <td>{{p.Brand}}</td>
+            <td>{{p.ProductDescription}}</td>
+            <td>{{p.Category}}</td>
+            <td>${{p.Cost}}</td>
+            <td>${{p.ListPrice}}</td>
+            <td>${{p.DeliveryCost}}</td>
+            <td>{{p.SoldQuantity}}</td>
+            <td>{{p.OnHandQuantity}}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

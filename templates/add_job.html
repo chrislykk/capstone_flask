@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Add Job | HRS</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 32rem; margin: 2rem auto; padding: 0 1rem; color: #222; }
+    h1 { font-size: 1.5rem; margin-bottom: 1rem; }
+    label { display: block; margin-top: 1rem; font-weight: 600; }
+    input, select { font-size: 1rem; padding: 0.4rem; width: 100%; box-sizing: border-box; margin-top: 0.25rem; }
+    button { margin-top: 1.5rem; font-size: 1rem; padding: 0.5rem 1.25rem; }
+    .hint { color: #666; font-size: 0.9rem; }
+    .error { color: #b00020; }
+  </style>
+</head>
+<body>
+  <h1>Add a job</h1>
+  <p><a href="{{ url_for('jobs') }}">Back to jobs</a></p>
+
+  {% if error %}<p class="error">{{ error }}</p>{% endif %}
+
+  <form method="post">
+    <label for="customer_id">Customer</label>
+    <select name="customer_id" id="customer_id" required>
+      <option value="">Choose a customer</option>
+      {% for c in customers %}
+        <option value="{{ c.CustomerID }}" {% if form.get('customer_id') == c.CustomerID|string %}selected{% endif %}>
+          {{ c.LastName }}, {{ c.FirstName }}
+        </option>
+      {% endfor %}
+    </select>
+
+    <label for="location_id">Branch</label>
+    <select name="location_id" id="location_id" required>
+      <option value="">Choose a branch</option>
+      {% for loc in locations %}
+        <option value="{{ loc.LocationID }}" {% if form.get('location_id') == loc.LocationID|string %}selected{% endif %}>
+          {{ loc.LocationName }}
+        </option>
+      {% endfor %}
+    </select>
+
+    <label for="employee_id">Salesperson (optional)</label>
+    <select name="employee_id" id="employee_id">
+      <option value="">None</option>
+      {% for e in employees %}
+        <option value="{{ e.EmployeeID }}" {% if form.get('employee_id') == e.EmployeeID|string %}selected{% endif %}>
+          {{ e.LastName }}, {{ e.FirstName }}
+        </option>
+      {% endfor %}
+    </select>
+
+    <label for="job_description">Description</label>
+    <input type="text" name="job_description" id="job_description" maxlength="255" placeholder="Full kitchen remodel" required value="{{ form.get('job_description', '') }}">
+
+    <label for="bid_date">Bid date</label>
+    <input type="date" name="bid_date" id="bid_date" required value="{{ form.get('bid_date', today) }}">
+
+    <p class="hint">New jobs start as Out for Bid. Add services on the next page.</p>
+    <button type="submit">Create job</button>
+  </form>
+</body>
+</html>
