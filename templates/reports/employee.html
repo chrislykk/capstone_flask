@@ -1,0 +1,32 @@
+{% extends "reports/base.html" %}
+
+{% block title %}Employee Report | HRS{% endblock %}
+
+{% block content %}
+<br>
+<h1>Employee Report</h1>
+<table class="table">
+    <thead>
+        <tr class="theme-inverse">
+            <td>Employee ID</td>
+            <td>First Name</td>
+            <td>Last Name</td>
+            <td>Job Title</td>
+            <td>Location Name</td>
+            <td>Salary</td>
+        </tr>
+    </thead>
+    <tbody>
+    {% for e in employees %}
+        <tr>
+            <td>{{e.EmployeeID}}</td>
+            <td>{{e.FirstName}}</td>
+            <td>{{e.LastName}}</td>
+            <td>{{e.JobTitle}}</td>
+            <td>{{e.LocationName}}</td>
+            <td>{{"${:,.2f}".format(e.Salary)}}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

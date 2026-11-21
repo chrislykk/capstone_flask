@@ -1,0 +1,92 @@
+{% extends "reports/base.html" %}
+
+{% block title %}Customer Statement | HRS{% endblock %}
+
+{% block content %}
+<br>
+<h1>Home Renovation Solutions</h1>
+<span>101 Sedalia Dr</span>
+<br>
+<span>Phoenix, AZ 85001</span>
+<br>
+<h3>Customer Statement</h3>
+<br>
+<h5>Bill to:</h5>
+<span>{{customer.FirstName}} {{customer.LastName}}</span>
+<br>
+<span>{{customer.Street}}</span>
+<br>
+<span>{{customer.City}}, {{customer.State}} {{customer.Zip}}</span>
+<br>
+<span>{{customer.Phone}}</span>
+<br>
+<span>{{customer.Email}}</span>
+<br>
+<br>
+
+<table class="table">
+    <thead>
+        <tr class="theme-inverse">
+            <td colspan="2">Account Summary</td>
+        </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>Statement Date</td>
+        <td>{{statement_date}}</td>
+    </tr>
+    <tr>
+        <td>Beginning Balance</td>
+        <td>{{"${:,.2f}".format(beginning_balance)}}</td>
+    </tr>
+    <tr>
+        <td>New Charges</td>
+        <td>{{"${:,.2f}".format(new_charges)}}</td>
+    </tr>
+    <tr>
+        <td>Total Paid</td>
+        <td>{{"${:,.2f}".format(total_payments)}}</td>
+    </tr>
+    <tr>
+        <td><strong>Balance Due</strong></td>
+        <td><strong>{{"${:,.2f}".format(balance_due)}}</strong></td>
+    </tr>
+    <tr>
+        <td><strong>Payment Due Date</strong></td>
+        <td><strong>{{payment_due_date}}</strong></td>
+    </tr>
+    </tbody>
+</table>
+
+<h5>Orders:</h5>
+<table class="table">
+    <thead>
+        <tr class="theme-inverse">
+            <td>Order ID</td>
+            <td>Order Date</td>
+            <td>Item Total</td>
+            <td>Delivery Charge</td>
+            <td>Tax Rate</td>
+            <td>Order Total</td>
+            <td>Payment Date</td>
+            <td>Amount Paid</td>
+            <td>Amount Due</td>
+        </tr>
+    </thead>
+    <tbody>
+    {% for o in customer_orders %}
+    <tr>
+        <td>{{o.OrderID}}</td>
+        <td>{{o.OrderDate}}</td>
+        <td>{{"${:,.2f}".format(o.LineItemTotal)}}</td>
+        <td>{{"${:,.2f}".format(o.DeliveryCharge)}}</td>
+        <td>{{"{:.2%}".format(o.TaxRate)}}</td>
+        <td>{{"${:,.2f}".format(o.OrderTotal)}}</td>
+        <td>{{o.LastPaymentDate or ''}}</td>
+        <td>{{"${:,.2f}".format(o.TotalPaid)}}</td>
+        <td>{{"${:,.2f}".format(o.AmountDue)}}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

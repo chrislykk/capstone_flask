@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Job {{ job.JobID }} | HRS</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 64rem; margin: 2rem auto; padding: 0 1rem; color: #222; }
+    h1 { font-size: 1.5rem; margin-bottom: 1rem; }
+    h2 { font-size: 1.15rem; margin-top: 2rem; }
+    input, select, button { font-size: 1rem; padding: 0.3rem 0.5rem; }
+    label { margin-right: 0.25rem; }
+    .table-wrap { overflow-x: auto; }
+    table { border-collapse: collapse; width: 100%; margin-top: 1rem; }
+    th, td { text-align: left; padding: 0.5rem 0.75rem; border-bottom: 1px solid #ddd; white-space: nowrap; }
+    th { background: #f2f4f7; }
+    .num { text-align: right; }
+    tfoot td { font-weight: 600; border-top: 2px solid #ccc; border-bottom: none; }
+    .info { line-height: 1.6; }
+    .count, .hint { color: #666; }
+    .count { margin-top: 1rem; }
+    .error { color: #b00020; }
+    form p { margin: 0.5rem 0; }
+  </style>
+</head>
+<body>
+  <h1>Job {{ job.JobID }}: {{ job.JobDescription or "" }}</h1>
+  <p><a href="{{ url_for('index') }}">Staff portal</a> | <a href="{{ url_for('jobs') }}">Back to jobs</a> | <a href="/logout">Log out</a></p>
+
+  {% if error %}<p class="error">{{ error }}</p>{% endif %}
+
+  <div class="info">
+    <div><strong>Customer:</strong> {{ job.CustFirst }} {{ job.CustLast }}
+      {% if job.Phone %} &middot; {{ job.Phone }}{% endif %}
+      {% if job.Email %} &middot; {{ job.Email }}{% endif %}</div>
+    <div><strong>Job site:</strong> {{ job.Street or "" }}{% if job.City %}, {{ job.City }}{% endif %} {{ job.State or "" }} {{ job.Zip or "" }}</div>
+    <div><strong>Branch:</strong> {{ job.LocationName }}</div>
+    <div><strong>Salesperson:</strong> {% if job.EmpFirst %}{{ job.EmpFirst }} {{ job.EmpLast }}{% else %}None{% endif %}</div>
+    <div><strong>Bid date:</strong> {{ job.BidDate or "" }}</div>
+    <div><strong>Start date:</strong> {{ job.StartDate or "Not started" }}</div>
+    <div><strong>Completion date:</strong> {{ job.CompletionDate or "Not complete" }}</div>
+  </div>
+
+  <form method="post">
+    <input type="hidden" name="action" value="set_status">
+    <p>
+      <label for="status"><strong>Status:</strong></label>
+      <select name="status" id="status">
+        {% for s in statuses %}
+          <option value="{{ s }}" {% if s == job.JobStatus %}selected{% endif %}>{{ s }}</option>
+        {% endfor %}
+      </select>
+      <button type="submit">Update status</button>
+    </p>
+    <p class="hint">Moving to In Progress or Complete fills in today's start or completion date if it's blank.</p>
+  </form>
+
+  <h2>Services</h2>
+  {% if lines %}
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Service</th><th>Work area</th><th class="num">Est. hours</th><th class="num">Rate</th><th class="num">Line total</th></tr>
+        </thead>
+        <tbody>
+          {% for l in lines %}
+            <tr>
+              <td>{{ l.ServiceName }}{% if l.VendorName %} ({{ l.VendorName }}){% endif %}</td>
+              <td>{{ l.WorkArea or "" }}</td>
+              <td class="num">{{ l.EstimatedHours if l.EstimatedHours is not none else "" }}</td>
+              <td class="num">{% if l.RateCharged is not none %}${{ "%.2f"|format(l.RateCharged) }}/hr{% endif %}</td>
+              <td class="num">{% if l.LineTotal is not none %}${{ "%.2f"|format(l.LineTotal) }}{% else %}Not priced{% endif %}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot>
+          <tr><td colspan="4" class="num">Estimate</td><td class="num">${{ "%.2f"|format(estimate) }}</td></tr>
+        </tfoot>
+      </table>
+    </div>
+    {% if unpriced %}<p class="hint">Lines marked "Not priced" have no hours or rate (for example, work quoted by a subcontractor) and aren't in the estimate.</p>{% endif %}
+  {% else %}
+    <p class="count">No services on this job yet.</p>
+  {% endif %}
+
+  <h2>Add a service</h2>
+  <form method="post">
+    <input type="hidden" name="action" value="add_service">
+    <p>
+      <label for="service_id">Service</label>
+      <select name="service_id" id="service_id" required>
+        <option value="">Choose a service</option>
+        {% for s in services %}
+          <option value="{{ s.ServiceID }}" {% if form.get('service_id') == s.ServiceID|string %}selected{% endif %}>
+            {{ s.ServiceName }}{% if s.HourlyRate is not none %} - ${{ "%.2f"|format(s.HourlyRate) }}/hr{% else %} - subcontracted{% endif %}
+          </option>
+        {% endfor %}
+      </select>
+      <label for="work_area">Work area</label>
+      <input type="text" name="work_area" id="work_area" maxlength="50" placeholder="Kitchen" value="{{ form.get('work_area', '') }}">
+    </p>
+    <p>
+      <label for="estimated_hours">Est. hours</label>
+      <input type="number" name="estimated_hours" id="estimated_hours" min="0" step="0.25" value="{{ form.get('estimated_hours', '') }}" style="width: 6rem">
+      <label for="rate_charged">Rate</label>
+      <input type="number" name="rate_charged" id="rate_charged" min="0" step="0.01" placeholder="Standard" value="{{ form.get('rate_charged', '') }}" style="width: 8rem">
+      <button type="submit">Add service</button>
+    </p>
+  </form>
+</body>
+</html>

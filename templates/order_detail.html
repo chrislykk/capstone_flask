@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Order {{ order.OrderID }} | HRS</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 64rem; margin: 2rem auto; padding: 0 1rem; color: #222; }
+    h1 { font-size: 1.5rem; margin-bottom: 1rem; }
+    h2 { font-size: 1.15rem; margin-top: 2rem; }
+    input, select, button { font-size: 1rem; padding: 0.3rem 0.5rem; }
+    label { margin-right: 0.25rem; }
+    .table-wrap { overflow-x: auto; }
+    table { border-collapse: collapse; width: 100%; margin-top: 1rem; }
+    th, td { text-align: left; padding: 0.5rem 0.75rem; border-bottom: 1px solid #ddd; white-space: nowrap; }
+    th { background: #f2f4f7; }
+    .num { text-align: right; }
+    tfoot td { border-bottom: none; }
+    tfoot tr:last-child td { font-weight: 600; border-top: 2px solid #ccc; }
+    .info { line-height: 1.6; }
+    .count { color: #666; margin-top: 1rem; }
+    .error { color: #b00020; }
+    form p { margin: 0.5rem 0; }
+  </style>
+</head>
+<body>
+  <h1>Order {{ order.OrderID }}</h1>
+  <p><a href="{{ url_for('index') }}">Staff portal</a> | <a href="{{ url_for('orders') }}">Back to orders</a> | <a href="/logout">Log out</a></p>
+
+  {% if error %}<p class="error">{{ error }}</p>{% endif %}
+
+  <div class="info">
+    <div><strong>Customer:</strong> {{ order.CustFirst }} {{ order.CustLast }}
+      {% if order.Phone %} &middot; {{ order.Phone }}{% endif %}
+      {% if order.Email %} &middot; {{ order.Email }}{% endif %}</div>
+    <div><strong>Deliver to:</strong> {{ order.Street or "" }}{% if order.City %}, {{ order.City }}{% endif %} {{ order.State or "" }} {{ order.Zip or "" }}</div>
+    <div><strong>Branch:</strong> {{ order.LocationName }}</div>
+    <div><strong>Salesperson:</strong> {% if order.EmpFirst %}{{ order.EmpFirst }} {{ order.EmpLast }}{% else %}None{% endif %}</div>
+    <div><strong>Order date:</strong> {{ order.OrderDate }}</div>
+  </div>
+
+  <form method="post">
+    <input type="hidden" name="action" value="set_status">
+    <p>
+      <label for="status"><strong>Status:</strong></label>
+      <select name="status" id="status">
+        {% for s in statuses %}
+          <option value="{{ s }}" {% if s == order.OrderStatus %}selected{% endif %}>{{ s }}</option>
+        {% endfor %}
+      </select>
+      <button type="submit">Update status</button>
+    </p>
+  </form>
+
+  <h2>Items</h2>
+  {% if items %}
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Brand</th><th>Description</th><th>Model</th><th class="num">Qty</th><th class="num">Unit price</th><th class="num">Line total</th></tr>
+        </thead>
+        <tbody>
+          {% for i in items %}
+            <tr>
+              <td>{{ i.Brand }}</td>
+              <td>{{ i.ProductDescription }}</td>
+              <td>{{ i.ModelNumber }}</td>
+              <td class="num">{{ i.Quantity }}</td>
+              <td class="num">${{ "%.2f"|format(i.UnitPrice) }}</td>
+              <td class="num">${{ "%.2f"|format(i.Quantity * i.UnitPrice) }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot>
+          <tr><td colspan="5" class="num">Subtotal</td><td class="num">${{ "%.2f"|format(subtotal) }}</td></tr>
+          <tr><td colspan="5" class="num">Tax ({{ "%.2f"|format(order.TaxRate * 100) }}%)</td><td class="num">${{ "%.2f"|format(tax) }}</td></tr>
+          <tr><td colspan="5" class="num">Delivery</td><td class="num">${{ "%.2f"|format(order.DeliveryCharge) }}</td></tr>
+          <tr><td colspan="5" class="num">Total</td><td class="num">${{ "%.2f"|format(total) }}</td></tr>
+        </tfoot>
+      </table>
+    </div>
+  {% else %}
+    <p class="count">No items on this order yet.</p>
+  {% endif %}
+
+  <h2>Add an item</h2>
+  <form method="post">
+    <input type="hidden" name="action" value="add_item">
+    <p>
+      <label for="product_id">Product</label>
+      <select name="product_id" id="product_id" required>
+        <option value="">Choose a product</option>
+        {% for p in products %}
+          <option value="{{ p.ProductID }}" {% if form.get('product_id') == p.ProductID|string %}selected{% endif %}>
+            {{ p.Brand }} {{ p.ProductDescription }} ({{ p.ModelNumber }}) - ${{ "%.2f"|format(p.ListPrice) }}
+          </option>
+        {% endfor %}
+      </select>
+    </p>
+    <p>
+      <label for="quantity">Qty</label>
+      <input type="number" name="quantity" id="quantity" min="1" step="1" required value="{{ form.get('quantity', '1') }}" style="width: 5rem">
+      <label for="unit_price">Unit price</label>
+      <input type="number" name="unit_price" id="unit_price" min="0" step="0.01" placeholder="List price" value="{{ form.get('unit_price', '') }}" style="width: 8rem">
+      <button type="submit">Add item</button>
+    </p>
+  </form>
+</body>
+</html>
